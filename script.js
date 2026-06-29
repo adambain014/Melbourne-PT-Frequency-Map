@@ -108,7 +108,16 @@ async function loadSVG(src, preserveViewBox) {
       if (layer) layer.style.display = "none";
     });
 
-    initZoom(svg, preserveViewBox);
+    const panzoom = Panzoom(svg, {
+      maxScale: 50,
+      startScale: 2,
+      startX: 0,
+      startY: 150,
+      animate: false,
+      duration: 0
+    });
+
+    initZoom(panzoom, wrapper)
   } catch (e) {
     wrapper.innerHTML =
       '<p style="padding:2rem;text-align:center;color:#888;font-size:13px;">Could not load <code>' +
@@ -122,263 +131,19 @@ async function loadSVG(src, preserveViewBox) {
   await loadSVG(LIGHT_SVG, null);
 })();
 
-function initZoom(svg, preserveViewBox) {
-  const container = document.querySelector(".map-container");
-  const wrapper = document.getElementById("map-svg-wrapper");
+function initZoom(panzoom, wrapper) {
+  wrapper.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
 
-  const vbParts = svg
-    .getAttribute("viewBox")
-    .split(/[\s,]+/)
-    .map(Number);
-  const origVB = { x: vbParts[0], y: vbParts[1], w: vbParts[2], h: vbParts[3] };
-  let vb = { ...origVB };
+  document.getElementById("zoomIn")
+    .addEventListener('click', panzoom.zoomIn);
 
-  // Restore previous pan/zoom if swapping SVGs, otherwise start at 2x zoom
-  if (preserveViewBox) {
-    const parts = preserveViewBox.split(/[\s,]+/).map(Number);
-    vb = { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
-    setViewBox();
-  } else {
-    const initialScale = 2;
-
-    vb.w = origVB.w / initialScale;
-    vb.h = origVB.h / initialScale;
-    vb.x = origVB.x + (origVB.w - vb.w) / 2;
-    vb.y = origVB.y + (origVB.h - vb.h) / 2 - 250;
-    setViewBox();
-
-  }
-
-  const MIN_SCALE = 1,
-    MAX_SCALE = 20,
-    ZOOM_STEP = 1.35;
-
-  function setViewBox() {
-    svg.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
-  }
-
-  function toSVG(px, py) {
-    const rect = wrapper.getBoundingClientRect();
-    return {
-      x: vb.x + px * (vb.w / rect.width),
-      y: vb.y + py * (vb.h / rect.height),
-    };
-  }
-
-  function currentScale() {
-    return origVB.w / vb.w;
-  }
-
-  function zoomAt(px, py, factor) {
-    const newScale = Math.min(
-      MAX_SCALE,
-      Math.max(MIN_SCALE, currentScale() * factor),
-    );
-    const targetW = origVB.w / newScale;
-    const targetH = origVB.h / newScale;
-    const pt = toSVG(px, py);
-    const rx = (pt.x - vb.x) / vb.w;
-    const ry = (pt.y - vb.y) / vb.h;
-    vb.w = targetW;
-    vb.h = targetH;
-    vb.x = pt.x - rx * vb.w;
-    vb.y = pt.y - ry * vb.h;
-    clamp();
-    setViewBox();
-  }
-
-  function clamp() {
-    vb.x = Math.min(origVB.x + origVB.w - vb.w, Math.max(origVB.x, vb.x));
-    vb.y = Math.min(origVB.y + origVB.h - vb.h, Math.max(origVB.y, vb.y));
-  }
-
-  document.getElementById("zoomIn").onclick = () => {
-    const r = wrapper.getBoundingClientRect();
-    zoomAt(r.width / 2, r.height / 2, ZOOM_STEP);
-  };
-  document.getElementById("zoomOut").onclick = () => {
-    const r = wrapper.getBoundingClientRect();
-    zoomAt(r.width / 2, r.height / 2, 1 / ZOOM_STEP);
-  };
-  document.getElementById("zoomReset").onclick = () => {
-    vb = { ...origVB };
-    setViewBox();
-  };
-
-  wrapper.addEventListener(
-    "wheel",
-    (e) => {
-      e.preventDefault();
-      const r = wrapper.getBoundingClientRect();
-      zoomAt(
-        e.clientX - r.left,
-        e.clientY - r.top,
-        e.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP,
-      );
-    },
-    { passive: false },
-  );
-
-
-  let dragging = false,
-    dragStartPt = null,
-    dragStartVB = null;
-
-  wrapper.addEventListener("mousedown", (e) => {
-    e.preventDefault();
-    if (currentScale() <= MIN_SCALE) return;
-    dragging = true;
-    const r = wrapper.getBoundingClientRect();
-    dragStartPt = toSVG(e.clientX - r.left, e.clientY - r.top);
-    dragStartVB = { ...vb };
-    container.classList.add("panning");
-  });
-  window.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
-    const r = wrapper.getBoundingClientRect();
-    const ratioX = vb.w / r.width;
-    const ratioY = vb.h / r.height;
-    vb.x =
-      dragStartVB.x -
-      (e.clientX - r.left - (dragStartPt.x - dragStartVB.x) / ratioX) * ratioX;
-    vb.y =
-      dragStartVB.y -
-      (e.clientY - r.top - (dragStartPt.y - dragStartVB.y) / ratioY) * ratioY;
-    clamp();
-    setViewBox();
-  });
-  window.addEventListener("mouseup", () => {
-    dragging = false;
-    container.classList.remove("panning");
-  });
-
-  let lastTouches = null;
-
-  wrapper.addEventListener(
-    "touchstart",
-    (e) => {
-      if (e.touches.length > 1) e.preventDefault();
-      lastTouches = Array.from(e.touches).map((t) => ({
-        x: t.clientX - wrapper.getBoundingClientRect().left,
-        y: t.clientY - wrapper.getBoundingClientRect().top,
-      }));
-    },
-    { passive: false },
-  );
-
-  wrapper.addEventListener(
-    "touchmove",
-    (e) => {
-      e.preventDefault();
-      const r = wrapper.getBoundingClientRect();
-      const touches = Array.from(e.touches).map((t) => ({
-        x: t.clientX - r.left,
-        y: t.clientY - r.top,
-      }));
-      if (touches.length === 2 && lastTouches && lastTouches.length === 2) {
-        const prev = lastTouches,
-          cur = touches;
-        const prevDist = Math.hypot(
-          prev[1].x - prev[0].x,
-          prev[1].y - prev[0].y,
-        );
-        const curDist = Math.hypot(cur[1].x - cur[0].x, cur[1].y - cur[0].y);
-        const midX = (cur[0].x + cur[1].x) / 2;
-        const midY = (cur[0].y + cur[1].y) / 2;
-        if (prevDist > 0) zoomAt(midX, midY, curDist / prevDist);
-      } else if (
-        touches.length === 1 &&
-        lastTouches &&
-        lastTouches.length === 1 &&
-        currentScale() > MIN_SCALE
-      ) {
-        const dx = ((touches[0].x - lastTouches[0].x) * vb.w) / r.width;
-        const dy = ((touches[0].y - lastTouches[0].y) * vb.h) / r.height;
-        vb.x -= dx;
-        vb.y -= dy;
-        clamp();
-        setViewBox();
-      }
-      lastTouches = touches;
-    },
-    { passive: false },
-  );
-
-  let lastTapTime = 0,
-    lastTapPos = null,
-    touchMoved = false;
-  const DOUBLE_TAP_DELAY = 300,
-    DOUBLE_TAP_DISTANCE = 30;
-
-  wrapper.addEventListener(
-    "touchstart",
-    () => {
-      touchMoved = false;
-    },
-    { passive: true },
-  );
-  wrapper.addEventListener(
-    "touchmove",
-    () => {
-      touchMoved = true;
-    },
-    { passive: true },
-  );
-
-  wrapper.addEventListener(
-    "touchend",
-    (e) => {
-      if (touchMoved) {
-        lastTouches = null;
-        return;
-      }
-      if (e.changedTouches.length !== 1) return;
-      const now = Date.now();
-      const touch = e.changedTouches[0];
-      const r = wrapper.getBoundingClientRect();
-      const tapX = touch.clientX - r.left;
-      const tapY = touch.clientY - r.top;
-      const isDoubleTap =
-        lastTapPos &&
-        now - lastTapTime < DOUBLE_TAP_DELAY &&
-        Math.hypot(tapX - lastTapPos.x, tapY - lastTapPos.y) <
-          DOUBLE_TAP_DISTANCE;
-      if (isDoubleTap) {
-        e.preventDefault();
-        zoomAt(tapX, tapY, ZOOM_STEP);
-        lastTapTime = 0;
-        lastTapPos = null;
-      } else {
-        lastTapTime = now;
-        lastTapPos = { x: tapX, y: tapY };
-      }
-      lastTouches = null;
-    },
-    { passive: false },
-  );
-  const teleportEl = svg.getElementById("path3295");
-  if (teleportEl) {
-    teleportEl.style.cursor = "pointer";
-    teleportEl.addEventListener("dblclick", (e) => {
-      e.stopPropagation();
-      const modal = document.getElementById("teleportModal");
-      modal.classList.add("open");
-
-      document.getElementById("teleportYes").onclick = () => {
-        modal.classList.remove("open");
-        vb.x = 100; 
-        vb.y = 1200;  
-        vb.w = origVB.w / 3.6;
-        vb.h = origVB.h / 3.6;
-        clamp();
-        setViewBox();
-      };
-      document.getElementById("teleportNo").onclick = () => {
-        modal.classList.remove("open");
-      };
-    });
-  }
-
+  document.getElementById("zoomOut")
+    .addEventListener('click', panzoom.zoomOut);
+  
+  document.getElementById("zoomReset")
+    .addEventListener('click', () => {
+      panzoom.zoom(2, { x: 0, y: 150 })
+    })
 }
 
 // ── Panel toggle logic ──
