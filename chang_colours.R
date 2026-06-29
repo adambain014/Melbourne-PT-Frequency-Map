@@ -6,7 +6,7 @@ svg_to_dark <- function(input_file, output_file) {
     
     # Backgrounds ---
     "#ffffff"  = "#1F1F1F",   # white
-    "#fff"     = "#1F1F1F",   # shorthand white 
+    "#fff" = "#1F1F1F",
     "#000000"  = "#cccccc",   # black text/outlines 
     
     # Water 
@@ -28,6 +28,7 @@ svg_to_dark <- function(input_file, output_file) {
     "#7a7a7a"  = "#999999",   # mid grey
     "#6a6a6a"  = "#aaaaaa",   # insert text/border
     "#4d4d4d"  = "#787878",   # dark grey features
+    "#f9f9f9"=   "#282828",  # CBD
     
     # Transit frequency bands - Viridis derived (very derived)
     "#8d6f32"  = "#c07830",   # < every 60 min   
@@ -45,9 +46,25 @@ svg_to_dark <- function(input_file, output_file) {
     
     "#0060a7"  = "#1a7abf"    # unknown blue 
   )
+
   
   # Replace on original text using ignore.case = TRUE
   out <- svg_text
+  
+  
+  out <- sub(
+    "<style>",
+    "<style>svg{fill:#cccccc;}",
+    out
+  )
+  
+  # Stroke replacements
+  out <- gsub('stroke="#000000"', 'stroke="#cccccc"', out, ignore.case = TRUE)
+  out <- gsub('stroke="#000"',    'stroke="#cccccc"', out, ignore.case = TRUE)
+  out <- gsub('stroke="black"',   'stroke="#cccccc"', out, ignore.case = TRUE)
+  out <- gsub('stroke:black',     'stroke:#cccccc',   out, ignore.case = TRUE)
+  out <- gsub('stroke:#000000',   'stroke:#cccccc',   out, ignore.case = TRUE)
+  out <- gsub('stroke:#000',      'stroke:#cccccc',   out, ignore.case = TRUE)
   
   for (i in seq_along(colour_map)) {
     old_col <- names(colour_map)[i]
@@ -60,6 +77,13 @@ svg_to_dark <- function(input_file, output_file) {
   out <- gsub('fill:black',  paste0('fill:', colour_map["#000000"]),  out, ignore.case = TRUE)
   out <- gsub('"white"',     paste0('"', colour_map["#ffffff"], '"'), out, ignore.case = TRUE)
   out <- gsub('"black"',     paste0('"', colour_map["#000000"], '"'), out, ignore.case = TRUE)
+  
+  # Replace scour-generated class colours
+  out <- gsub("\\.a\\{fill:#fff;\\}", ".a{fill:#1F1F1F;}", out)
+  out <- gsub("\\.b\\{fill:#f60;\\}", ".b{fill:???;}", out)
+  out <- gsub("\\.c\\{fill:#0060a7;\\}", ".c{fill:#1a7abf;}", out)
+  
+  
   
   # Page background (Inkscape namedview)
   out <- gsub('pagecolor="#ffffff"', paste0('pagecolor="', colour_map["#ffffff"], '"'), out, ignore.case = TRUE)
