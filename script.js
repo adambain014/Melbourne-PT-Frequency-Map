@@ -1,4 +1,3 @@
-
 // ── Dark mode toggle ──
 const LIGHT_SVG = "recent_map.svg";
 const DARK_SVG = "dark_map.svg";
@@ -38,9 +37,8 @@ const SWATCH_DARK = {
   "freq-30": "#3d9ae8",
   "freq-60": "#CF5DBF",
   "freq-ltd": "#c07830",
-  "flexiride-swatch": "#291A10",
+  "flexiride-swatch": "#301F13",
 };
-
 let isDark = false;
 
 const darkToggleBtn = document.getElementById("darkToggle");

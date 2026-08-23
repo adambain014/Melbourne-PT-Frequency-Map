@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +15,7 @@
   
   <!-- Open Graph (Discord, Facebook, Reddit) -->
 <meta property="og:title" content="Melbourne PT Frequency Map">
-<meta property="og:description" content="See how often trams, trains and buses run across Melbourne at midday on a weekday - colour-coded by frequency.">
+<meta property="og:description" content="A full map of Melbourne's public transport - colour-coded by service frequency.">
 <meta property="og:image" content="https://adambain014.github.io/Melbourne-PT-Frequency-Map/preview.png">
 <meta property="og:url" content="https://adambain014.github.io/Melbourne-PT-Frequency-Map/">
 <meta property="og:type" content="website">
@@ -34,12 +33,12 @@
 <div class="top-bar">
   <div class="top-bar-center">
     <h1>Melbourne PT Frequency Map</h1>
-    <span class="subtitle" style="margin-top:2px;">Unofficial - Current as of July 2026 - by Adam Bain</span>
+    <span class="subtitle" style="margin-top:2px;">Unofficial - Current as of August 2026 - by Adam Bain</span>
   </div>
 </div>
 <div class="sub-bar">
   <a href="https://ptmapmelb.com/frequencyfinder/" target="_blank" rel="noopener">
-    FrequencyFinder - Interactive Timetable Dashboard
+    FrequencyFinder - Interactive Timetable Dashboard 
   </a>
 </div>
  
@@ -83,7 +82,7 @@
  
   <!-- Legend panel -->
   <div class="map-panel legend-panel" id="legendPanel" role="region" aria-label="Map legend">
-    <p class="legend-section-title">At Midday on a Weekday<br>this Service Runs Every:</p>
+    <p class="legend-section-title">At Midday on a Weekday this<br>Service Runs at Least Every:</p>
  
     <label class="legend-row" data-layers="layer3, layer5, layer60, layer49, layer74, layer67, layer40, layer27, layer80">
       <input type="checkbox" checked>
@@ -122,7 +121,7 @@
     </label>
  
     <hr class="legend-divider">
-    <p class="legend-section-title">Features</p>
+    <p class="legend-section-title">Map Features</p>
  
     <label class="legend-row" data-layers="layer11">
       <span class="swatch-interchange"></span>
@@ -134,18 +133,18 @@
     </label>
     <label class="legend-row" data-layers="layer17">
       <span class="swatch-hosp"></span>
-      <span class="legend-label">Hospital</span>
+      <span class="legend-label">Hospitals</span>
     </label>
     <label class="legend-row" data-layers="layer18,layer20,layer1">
-      <span class="swatch-fwy" style="background:#dfdfdfff;"></span>
+      <span class="swatch-fwy"></span>
       <span class="legend-label">Freeway</span>
     </label>
     <label class="legend-row" data-layers="layer16">
-      <span class="swatch-rect parks-swatch" style="background:#b9d3b5; border: 1px solid #8faa8b;"></span>
+      <span class="swatch-rect parks-swatch"></span>
       <span class="legend-label">Parks</span>
     </label>
     <label class="legend-row" data-layers="layer21">
-      <span class="swatch-rect" style="background:#b5effb; border: 1px solid #7dc8d8;"></span>
+      <span class="swatch-rect water-swatch"></span>
       <span class="legend-label">Lakes &amp; waterways</span>
     </label>
   </div>
@@ -156,15 +155,15 @@
     <p>This map shows public transport frequency across metropolitan Melbourne at midday on a typical weekday. Routes are colour-coded by how often they run, irrespective of mode.</p>
     <hr>
     <p class="info-section-title">Rationale</p>
-    <p>Existing local area maps largely fail to distinguish frequent routes from infrequent ones. Inspired by the <a href="https://seattletransitblog.com/2016/01/07/the-seattle-transit-map-and-guide/" target="_blank" rel="noopener">Seattle Transit Map</a> and the Miami Metrobus Map, this map uses colour and line weight to represent frequency, stripping out much of the visual noise.</p>
-    <p>The background is intentionally simplified — this is a friendly overview of the network, not a navigation tool. Trip planning apps are better suited for end-to-end journey planning.</p>
+    <p>Existing local area maps largely fail to distinguish frequent routes from infrequent ones. Inspired by the <a href="https://seattletransitblog.com/2016/01/07/the-seattle-transit-map-and-guide/" target="_blank" rel="noopener">Seattle Transit Map</a> and the <a href="https://www.miamidade.gov/resources/transportation_publicworks/documents/system-maps-web.pdf" target="_blank" rel="noopener">Miami Metrobus Map</a>, this map uses colour and line weight to represent frequency, stripping out much of the visual noise.</p>
+    <p>The background is intentionally simplified - this is a friendly overview of the network, not a navigation tool. Trip planning apps are better suited for end-to-end journey planning.</p>
     <hr>
     <p class="info-section-title">Data &amp; methodology</p>
-    <p>Frequency is based on timetables current as of July 2026, assessed across a midday window of approximately 11:00–13:00 on a weekday. Flexiride zones operate as on-demand services and are shown as shaded areas rather than fixed routes.</p>
+    <p>Frequency is based on timetables current as of August 2026, assessed across a midday window of approximately 12pm-1pm on a typical weekday. Flexiride zones operate as on-demand services and are shown as shaded areas rather than fixed routes.</p>
     <hr>
     <p class="info-section-title">Notes</p>
     <p>Unofficial — not affiliated with PTV or the Victorian Government. Check <a href="https://transport.vic.gov.au/" target="_blank" rel="noopener">transport.vic.gov.au</a> for current timetables.</p>
-    <p>Created by Adam Bain, July 2026. Contact: <a href="mailto:adambain014@gmail.com">adambain014@gmail.com</a></p>
+    <p>Created by Adam Bain, May 2026. Contact: <a href="mailto:adambain014@gmail.com">adambain014@gmail.com</a></p>
     <p><a href="https://github.com/adambain014/Melbourne-PT-Frequency-Map/issues" target="_blank" rel="noopener">Report an issue on GitHub ↗</a></p>
   </div>
  
