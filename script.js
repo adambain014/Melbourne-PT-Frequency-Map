@@ -171,6 +171,7 @@ async function loadSVG(src, preserveViewBox) {
     const doc = parser.parseFromString(text, "image/svg+xml");
     const svg = doc.querySelector("svg");
     if (!svg || doc.querySelector("parsererror")) throw new Error("bad SVG");
+    clipToViewBox(svg, "artboard-clip-a");  
 
     svg.removeAttribute("width");
     svg.removeAttribute("height");
@@ -234,7 +235,7 @@ async function loadCompare() {
     const doc = new DOMParser().parseFromString(text, "image/svg+xml");
     const svg = doc.querySelector("svg");
     if (!svg || doc.querySelector("parsererror")) throw new Error("bad SVG");
-
+    clipToViewBox(svg, "artboard-clip-b");  
     svg.removeAttribute("width");
     svg.removeAttribute("height");
     svg.style.width = "100%";
@@ -807,3 +808,27 @@ document.querySelectorAll(".legend-row[data-layers]").forEach((row) => {
     toggle();
   });
 });
+
+
+function clipToViewBox(svg, id) {
+  const parts = (svg.getAttribute("viewBox") || "").split(/[\s,]+/).map(Number);
+  if (parts.length !== 4 || parts.some(isNaN)) return;
+  const [x, y, w, h] = parts;
+  const ns = "http://www.w3.org/2000/svg";
+
+  const clip = document.createElementNS(ns, "clipPath");
+  clip.setAttribute("id", id);
+  const rect = document.createElementNS(ns, "rect");
+  rect.setAttribute("x", x);
+  rect.setAttribute("y", y);
+  rect.setAttribute("width", w);
+  rect.setAttribute("height", h);
+  clip.appendChild(rect);
+
+  const g = document.createElementNS(ns, "g");
+  g.setAttribute("clip-path", `url(#${id})`);
+  while (svg.firstChild) g.appendChild(svg.firstChild);
+
+  svg.appendChild(clip);
+  svg.appendChild(g);
+}
