@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-6P7JZBFM00"></script>
 <script>
@@ -23,6 +26,9 @@
 <link rel="icon" type="image/png" href="https://adambain014.github.io/Melbourne-PT-Frequency-Map/icon.png">
 <title>Melbourne PT Frequency Map</title>
 <link rel="stylesheet" href="style.css">
+<!-- Start downloading the default map immediately, in parallel with the page and script -->
+<link rel="preload" href="maps/small_maps/weekday_small_light.svg" as="fetch" type="image/svg+xml" crossorigin>
+<script src="script.js" defer></script>
 </head>
 
 
@@ -45,8 +51,38 @@
 <!-- ── Full-screen map ── -->
 <div class="map-container">
   <button class="dark-toggle" id="darkToggle" title="Toggle dark mode"></button>
+  <select class="day-select" id="daySelect" aria-label="Day of week" title="Choose day">
+    <option value="weekday">Weekday</option>
+    <option value="sat">Saturday</option>
+    <option value="sun">Sunday</option>
+  </select>
+  <button class="map-btn compare-btn" id="compareBtn" aria-pressed="false" title="Compare two days">
+    <svg width="13" height="12" viewBox="0 0 13 12" fill="none">
+      <path d="M1.5 1.5h4v9h-4z" fill="none" stroke="#555" stroke-width="1.4" stroke-linejoin="round"/>
+      <rect x="7.3" y="0.8" width="4.9" height="10.4" rx="1" fill="#555"/>
+    </svg>
+    Compare
+  </button>
+  <select class="day-select compare-day" id="compareDaySelect" aria-label="Compare against" title="Compare against" hidden>
+    <option value="weekday">Weekday</option>
+    <option value="sat" selected>Saturday</option>
+    <option value="sun">Sunday</option>
+  </select>
   <div id="map-svg-wrapper">
     <div class="loading">Loading map…</div>
+  </div>
+
+  <!-- Compare mode: second map (shadow DOM) clipped to the right of the divider -->
+  <div class="compare-layer" id="compareLayer" aria-hidden="true"></div>
+  <div class="compare-divider" id="compareDivider" role="slider" tabindex="0"
+       aria-label="Comparison divider" aria-valuemin="5" aria-valuemax="95" aria-valuenow="50">
+    <span class="compare-label compare-label-a" id="compareLabelA"></span>
+    <span class="compare-label compare-label-b" id="compareLabelB"></span>
+    <span class="compare-handle">
+      <svg width="16" height="10" viewBox="0 0 16 10" fill="none">
+        <path d="M5 1L1 5l4 4M11 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
   </div>
   
   <div class="map-backdrop" id="mapBackdrop"></div>
@@ -82,7 +118,7 @@
  
   <!-- Legend panel -->
   <div class="map-panel legend-panel" id="legendPanel" role="region" aria-label="Map legend">
-    <p class="legend-section-title">At Midday on a Weekday this<br>Service Runs at Least Every:</p>
+    <p class="legend-section-title">At Midday on a <span id="dayLabel">Weekday</span> this<br>Service Runs at Least Every:</p>
  
     <label class="legend-row" data-layers="layer3, layer5, layer60, layer49, layer74, layer67, layer40, layer27, layer80">
       <input type="checkbox" checked>
@@ -152,14 +188,14 @@
   <!-- Info panel -->
   <div class="map-panel info-panel" id="infoPanel" role="region" aria-label="Map information">
     <p class="info-section-title">About</p>
-    <p>This map shows public transport frequency across metropolitan Melbourne at midday on a typical weekday. Routes are colour-coded by how often they run, irrespective of mode.</p>
+    <p>This map shows public transport frequency across metropolitan Melbourne at midday on a typical weekday, Saturday or Sunday (use the selector at the top left). Routes are colour-coded by how often they run, irrespective of mode.</p>
     <hr>
     <p class="info-section-title">Rationale</p>
     <p>Existing local area maps largely fail to distinguish frequent routes from infrequent ones. Inspired by the <a href="https://seattletransitblog.com/2016/01/07/the-seattle-transit-map-and-guide/" target="_blank" rel="noopener">Seattle Transit Map</a> and the <a href="https://www.miamidade.gov/resources/transportation_publicworks/documents/system-maps-web.pdf" target="_blank" rel="noopener">Miami Metrobus Map</a>, this map uses colour and line weight to represent frequency, stripping out much of the visual noise.</p>
     <p>The background is intentionally simplified - this is a friendly overview of the network, not a navigation tool. Trip planning apps are better suited for end-to-end journey planning.</p>
     <hr>
     <p class="info-section-title">Data &amp; methodology</p>
-    <p>Frequency is based on timetables current as of October 2026, assessed across a midday window of approximately 12pm-1pm on a typical weekday. Flexiride zones operate as on-demand services and are shown as shaded areas rather than fixed routes.</p>
+    <p>Frequency is based on timetables current as of October 2026, assessed across a midday window of approximately 12pm-1pm on a typical weekday, Saturday or Sunday. Flexiride zones operate as on-demand services and are shown as shaded areas rather than fixed routes.</p>
     <hr>
     <p class="info-section-title">Notes</p>
     <p>Unofficial - not affiliated with PTV or the Victorian Government. Check <a href="https://transport.vic.gov.au/" target="_blank" rel="noopener">transport.vic.gov.au</a> for current timetables.</p>
@@ -176,7 +212,7 @@
 </div>
 
 <!-- Download PDF button -->
-<a class="zoom-btn download-btn" id="downloadPdf" href="https://ptmapmelb.com/light.pdf" download title="Download PDF">
+<a class="zoom-btn download-btn" id="downloadPdf" href="maps/poster_maps/weekday_small_light.pdf" download title="Download PDF">
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
     <path d="M8 1v9M8 10L4.5 6.5M8 10l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
     <path d="M2 12v1.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -194,6 +230,5 @@
 </div>
 
 
-<script src="script.js"></script>
 </body>
 </html>

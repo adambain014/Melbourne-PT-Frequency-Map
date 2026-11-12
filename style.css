@@ -1,4 +1,4 @@
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
  
   html, body {
     width: 100%;
@@ -7,7 +7,7 @@
   }
  
   body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     background: #f5f5f8;
     display: flex;
     flex-direction: column;
@@ -144,7 +144,7 @@ body.dark .sub-bar a {
     font-size: 16px;
     color: #555;
     transition: background 0.12s, border-color 0.2s;
-    z-index: 20;
+    z-index: 22;
   }
   .dark-toggle:hover { background: #e8e8e8; }
   body.dark .dark-toggle {
@@ -152,6 +152,40 @@ body.dark .sub-bar a {
     background: #1c1c1c;
   }
   body.dark .dark-toggle:hover { background: #252525; }
+
+  /* ── Day selector (under the dark toggle) ── */
+  .day-select {
+    position: absolute;
+    left: 50px;
+    top: 10px;
+    z-index: 20;
+    height: 30px;
+    padding: 0 6px;
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #222;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12)
+    -webkit-tap-highlight-color: transparent;
+  }
+  .day-select:hover { background: #f5f5f5; }
+  body.dark .day-select {
+    background: #1c1c1c;
+    border-color: #444;
+    color: #ccc;
+  }
+  body.dark .day-select:hover { background: #252525; }
+  .day-select:focus {
+  outline: none;
+}
+.day-select:focus-visible {
+  outline: 2px solid #2c8ab8;   
+  outline-offset: 1px;
+}
 
   /* ── Map fills remaining height ── */
   .map-container {
@@ -222,7 +256,7 @@ body.dark .sub-bar a {
     padding: 6px 11px 6px 9px;
     font-size: 12px;
     font-weight: 600;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: inherit;
     color: #222;
     cursor: pointer;
     display: flex;
@@ -235,11 +269,97 @@ body.dark .sub-bar a {
   .map-btn:hover { background: #f5f5f5; }
   .map-btn svg { flex-shrink: 0; }
   .map-btn .arrow { transition: transform 0.18s; }
-  .map-btn.open .arrow { transform: rotate(180deg); }
+  .map-btn .arrow path {
+    stroke: #222;
+    stroke-width: 2;
+  }
+  body.dark .map-btn .arrow path {
+    stroke: #ccc;
+  }
 
   .legend-btn { top: 10px; }
   .info-btn { top: 48px; }
  
+  /* ── Compare mode ── */
+  .compare-btn { left: 10px; right: auto; top: 48px; }
+  .compare-btn.active { background: #2c8ab8; border-color: #2c8ab8; color: #fff; }
+  .compare-btn.active svg path { stroke: #fff !important; }
+  .compare-btn.active svg rect { fill: #fff !important; stroke: #fff !important; }
+  .compare-day { top: 124px; }
+
+  .compare-layer {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;            /* pan/zoom still goes to the main map beneath */
+    background: #fff;
+    clip-path: inset(0 0 0 var(--split, 50%));
+  }
+  .compare-layer.on { display: block; }
+  body.dark .compare-layer { background: #0d0d0d; }
+
+  .compare-divider {
+    display: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--split, 50%);
+    width: 28px;
+    margin-left: -14px;
+    z-index: 15;
+    cursor: ew-resize;
+    touch-action: none;
+    outline: none;
+  }
+  .compare-divider.on { display: block; }
+  .compare-divider::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 13px;
+    width: 2px;
+    background: #fff;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.35);
+  }
+  .compare-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #888;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+  }
+  .compare-divider:focus-visible .compare-handle { outline: 2px solid #2c8ab8; outline-offset: 2px; }
+  .compare-label {
+    position: absolute;
+    top: 10px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #222;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid #bbb;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .compare-label-a { right: 22px; }
+  .compare-label-b { left: 22px; }
+  body.dark .compare-label { background: rgba(28,28,28,0.92); border-color: #444; color: #ccc; }
+  body.dark .compare-handle { background: #1c1c1c; border-color: #555; color: #ccc; }
+
   /* ── Shared panel styles ── */
   .map-panel {
     position: absolute;
@@ -285,7 +405,7 @@ body.dark .sub-bar a {
   .info-panel p {
     font-size: 12px;
     color: #333;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: inherit;
     line-height: 1.55;
     margin-bottom: 6px;
   }
@@ -374,7 +494,7 @@ body.dark .sub-bar a {
     font-weight: 700;
     line-height: 12px;   /* vertical centering */
     text-align: center;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: inherit;
 }
 
  
@@ -412,7 +532,7 @@ body.dark .sub-bar a {
     font-size: 14px;
     line-height: 16px;
     text-align: center;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: inherit;
   }
  
   .swatch-hosp {
@@ -431,7 +551,7 @@ body.dark .sub-bar a {
     font-weight: 700;
     line-height: 16px;
     text-align: center;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: inherit;
   }
  
   .swatch-rect {
@@ -447,7 +567,7 @@ body.dark .sub-bar a {
   .legend-label {
     font-size: 12px;
     color: #222;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: inherit;
     line-height: 1.3;
   }
  
@@ -484,7 +604,7 @@ body.dark .sub-bar a {
   }
   .teleport-box p {
     font-size: 14px;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: inherit;
     margin-bottom: 16px;
     color: #222;
   }
@@ -499,7 +619,7 @@ body.dark .sub-bar a {
     border-radius: 6px;
     border: 1px solid #bbb;
     font-size: 13px;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: inherit;
     cursor: pointer;
     transition: background 0.12s;
   }
@@ -561,4 +681,24 @@ body.dark .download-btn {
   
   [class^="swatch-"] {
   transition: all 0.3s ease;
+}
+
+
+/* Compare mode: day selects replace the labels either side of the divider */
+.map-container:has(.compare-divider.on) .compare-label {
+  display: none;
+}
+
+/* Left of divider: the main map's day */
+.map-container:has(.compare-divider.on) #daySelect {
+  left: auto;
+  right: calc(100% - var(--split, 50%) + 8px);
+  top: 10px;
+}
+
+/* Right of divider: the comparison day */
+.map-container:has(.compare-divider.on) #compareDaySelect {
+  left: calc(var(--split, 50%) + 8px);
+  right: auto;
+  top: 10px;
 }
