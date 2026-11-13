@@ -171,7 +171,7 @@ async function loadSVG(src, preserveViewBox) {
     const doc = parser.parseFromString(text, "image/svg+xml");
     const svg = doc.querySelector("svg");
     if (!svg || doc.querySelector("parsererror")) throw new Error("bad SVG");
-    clipToViewBox(svg, "artboard-clip-a");  
+    svg.setAttribute("data-artboard", svg.getAttribute("viewBox"));
 
     svg.removeAttribute("width");
     svg.removeAttribute("height");
@@ -235,7 +235,7 @@ async function loadCompare() {
     const doc = new DOMParser().parseFromString(text, "image/svg+xml");
     const svg = doc.querySelector("svg");
     if (!svg || doc.querySelector("parsererror")) throw new Error("bad SVG");
-    clipToViewBox(svg, "artboard-clip-b");  
+    svg.setAttribute("data-artboard", svg.getAttribute("viewBox"));
     svg.removeAttribute("width");
     svg.removeAttribute("height");
     svg.style.width = "100%";
@@ -347,6 +347,10 @@ function buildCullIndex(svg) {
     const mats = new Map();
     const IDENT = new DOMMatrix();
     const PAD = 10; // allowance for stroke width, in map units
+    // Original artboard, so shapes entirely outside it can be hidden permanently
+    const ab = (svg.getAttribute("data-artboard") || "").split(/[\s,]+/).map(Number);
+    const hasAB = ab.length === 4 && !ab.some(isNaN);
+    const ax0 = ab[0], ay0 = ab[1], ax1 = ab[0] + ab[2], ay1 = ab[1] + ab[3];
     let i = 0;
 
     // Combined transform of a node and all its ancestors up to the <svg>
@@ -395,6 +399,7 @@ function buildCullIndex(svg) {
           el,
           prev: el.style.display,
           visible: true,
+          outside: hasAB && (x1 < ax0 || x0 > ax1 || y1 < ay0 || y0 > ay1),
           x0: x0 - PAD, y0: y0 - PAD, x1: x1 + PAD, y1: y1 + PAD,
         });
       }
@@ -419,7 +424,7 @@ function applyCull(index, svg) {
   const x0 = cx - vw / 2 - vw * CULL_MARGIN, x1 = cx + vw / 2 + vw * CULL_MARGIN;
   const y0 = cy - vh / 2 - vh * CULL_MARGIN, y1 = cy + vh / 2 + vh * CULL_MARGIN;
   for (const it of index.items) {
-    const vis = it.x1 >= x0 && it.x0 <= x1 && it.y1 >= y0 && it.y0 <= y1;
+    const vis = !it.outside && it.x1 >= x0 && it.x0 <= x1 && it.y1 >= y0 && it.y0 <= y1;
     if (vis !== it.visible) {
       it.visible = vis;
       it.el.style.display = vis ? it.prev : "none";
@@ -808,27 +813,3 @@ document.querySelectorAll(".legend-row[data-layers]").forEach((row) => {
     toggle();
   });
 });
-
-
-function clipToViewBox(svg, id) {
-  const parts = (svg.getAttribute("viewBox") || "").split(/[\s,]+/).map(Number);
-  if (parts.length !== 4 || parts.some(isNaN)) return;
-  const [x, y, w, h] = parts;
-  const ns = "http://www.w3.org/2000/svg";
-
-  const clip = document.createElementNS(ns, "clipPath");
-  clip.setAttribute("id", id);
-  const rect = document.createElementNS(ns, "rect");
-  rect.setAttribute("x", x);
-  rect.setAttribute("y", y);
-  rect.setAttribute("width", w);
-  rect.setAttribute("height", h);
-  clip.appendChild(rect);
-
-  const g = document.createElementNS(ns, "g");
-  g.setAttribute("clip-path", `url(#${id})`);
-  while (svg.firstChild) g.appendChild(svg.firstChild);
-
-  svg.appendChild(clip);
-  svg.appendChild(g);
-}
